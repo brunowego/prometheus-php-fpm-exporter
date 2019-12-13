@@ -1,0 +1,12 @@
+apiVersion: v1
+appVersion: "1.0"
+description: PHP-FPM metrics exporter for prometheus
+name: prometheus-php-fpm-exporter
+version: 0.1.0
+home: https://github.com/hipages/php-fpm_exporter
+sources:
+- https://github.com/hipages/php-fpm_exporter
+- https://github.com/brunowego/prometheus-php-fpm-exporter
+maintainers:
+- name: brunowego
+  email: brunowego@gmail.com
