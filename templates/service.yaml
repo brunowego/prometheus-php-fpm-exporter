@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prometheus-php-fpm-exporter.fullname" . }}
+  labels:
+{{ include "prometheus-php-fpm-exporter.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.externalPort }}
+      targetPort: publish
+      protocol: TCP
+      name: php-fpm-exporter
+  selector:
+    app.kubernetes.io/name: {{ include "prometheus-php-fpm-exporter.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

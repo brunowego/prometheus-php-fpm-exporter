@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prometheus-php-fpm-exporter.fullname" . }}
+  labels:
+{{ include "prometheus-php-fpm-exporter.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "prometheus-php-fpm-exporter.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "prometheus-php-fpm-exporter.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+    {{- end }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ template "prometheus-php-fpm-exporter.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PHP_FPM_WEB_LISTEN_ADDRESS
+              value: "{{ .Values.phpFpm.webListenAddress }}"
+            - name: PHP_FPM_WEB_TELEMETRY_PATH
+              value: "{{ .Values.phpFpm.webTelemetryPath }}"
+            - name: PHP_FPM_SCRAPE_URI
+              value: "{{ .Values.phpFpm.scrapeUri }}"
+            - name: PHP_FPM_FIX_PROCESS_COUNT
+              value: "{{ .Values.phpFpm.fixProcessCount }}"
+            - name: PHP_FPM_LOG_LEVEL
+              value: "{{ .Values.phpFpm.logLevel }}"
+          ports:
+            - name: publish
+              containerPort: {{ .Values.service.internalPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: publish
+          readinessProbe:
+            httpGet:
+              path: /
+              port: publish
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
